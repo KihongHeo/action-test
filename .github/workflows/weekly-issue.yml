@@ -1,2 +1,23 @@
-- name: team-rotation
-  uses: lee-dohm/team-rotation@v1
+on:
+  schedule:
+    - cron: 0 20 * * 2
+name: Create weekly issue
+jobs:
+  stuff:
+    steps:
+      - uses: lee-dohm/last-assigned@v1
+        with:
+          query: 'label:weekly-issue'
+          token: ${{ secrets.GITHUB_TOKEN }}
+        id: assigned
+      - uses: lee-dohm/team-rotation@v1
+        with:
+          last: ${{ steps.assigned.outputs.last }}
+          include: octocat lee-dohm
+        id: rotation
+      - uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/weekly-issue-template.md
+          assignees: ${{ steps.rotation.outputs.next }}
